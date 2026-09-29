@@ -15,8 +15,7 @@ public final class OptionalExercises {
      * Finds an order by id.
      */
     public static Optional<Order> findById(List<Order> orders, long id) {
-        throw new UnsupportedOperationException("TODO");
-
+        return  orders.stream().filter(o -> o.id() == id).findFirst();
     }
 
     /**
@@ -25,7 +24,10 @@ public final class OptionalExercises {
      * Hint: map + orElse.
      */
     public static String customerOfOrder(List<Order> orders, long id) {
-        throw new UnsupportedOperationException("TODO");
+        return orders.stream()
+                .filter(order -> order.id() == id)
+                .findFirst().map(Order::customer)
+                .orElse("Unknown customer");
     }
 
     /**
@@ -34,7 +36,12 @@ public final class OptionalExercises {
      * Hint: orElseThrow.
      */
     public static Order getOrder(List<Order> orders, long id) {
-        throw new UnsupportedOperationException("TODO");
+
+        return orders.stream()
+                .filter(order -> order.id() == id)
+                .findFirst().orElseThrow(
+                        ()-> new OrderNotFoundException("Order "+ id + " not found"));
+
     }
 
     public static class OrderNotFoundException extends RuntimeException {
