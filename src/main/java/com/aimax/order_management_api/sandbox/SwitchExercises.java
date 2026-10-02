@@ -1,6 +1,7 @@
 package com.aimax.order_management_api.sandbox;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * Modern switch: switch as an expression, "->" arrows and pattern matching.
@@ -19,7 +20,14 @@ public final class SwitchExercises {
      *  CANCELLED -> "Cancelled"
      */
     public static String description(OrderStatus status) {
-        throw new UnsupportedOperationException("TODO");
+
+        return switch (status) {
+            case PENDING -> "Awaiting payment";
+            case PAID -> "Preparing your order";
+            case SHIPPED -> "On its way";
+            case DELIVERED -> "Delivered";
+            case CANCELLED -> "Cancelled";
+        };
     }
 
     /**
@@ -27,7 +35,10 @@ public final class SwitchExercises {
      * Hint: several constants in the same case (case A, B -> ...).
      */
     public static boolean canBeCancelled(OrderStatus status) {
-        throw new UnsupportedOperationException("TODO");
+        return switch (status) {
+            case PENDING, PAID -> true;
+            default -> false;
+        };
     }
 
     /**
@@ -38,7 +49,11 @@ public final class SwitchExercises {
      * Return the result with 2 decimals (HALF_UP rounding).
      */
     public static BigDecimal fee(PaymentMethod method, BigDecimal amount) {
-        throw new UnsupportedOperationException("TODO");
+        return switch (method){
+            case PaymentMethod.Card ignored -> amount.multiply(new BigDecimal("0.015")).setScale(2, RoundingMode.HALF_UP);
+            case PaymentMethod.BankTransfer ignored -> BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+            case PaymentMethod.Bizum ignored -> new BigDecimal("0.20").setScale(2, RoundingMode.HALF_UP);
+        };
     }
 
     /**
@@ -49,6 +64,10 @@ public final class SwitchExercises {
      *  Bizum("600111222")      -> "Bizum to 600111222"
      */
     public static String describe(PaymentMethod method) {
-        throw new UnsupportedOperationException("TODO");
+        return switch (method) {
+            case PaymentMethod.Card card -> "Card ending in " + card.last4Digits();
+            case PaymentMethod.Bizum bizum -> "Bizum to " + bizum.phone();
+            case PaymentMethod.BankTransfer bankTransfer -> "Bank transfer from " + bankTransfer.iban();
+        };
     }
 }
