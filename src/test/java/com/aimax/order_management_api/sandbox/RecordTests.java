@@ -1,6 +1,6 @@
 package com.aimax.order_management_api.sandbox;
 
-import static com.aimax.order_management_api.sandbox.PedidosDePrueba.linea;
+import static com.aimax.order_management_api.sandbox.TestOrders.line;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -15,129 +15,129 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-// Tests unitarios puros: sin @SpringBootTest, no hace falta arrancar Spring ni la base de datos.
+// Plain unit tests: no @SpringBootTest, so there is no need to start Spring or the database.
 class RecordTests {
 
     @Nested
-    @DisplayName("LineaPedido")
-    class LineaPedidoTests {
+    @DisplayName("OrderLine")
+    class OrderLineTests {
 
         @Test
-        @DisplayName("un record genera equals, hashCode y toString a partir de sus componentes")
+        @DisplayName("a record generates equals, hashCode and toString from its components")
         void equalsHashCodeToString() {
-            var a = linea("Teclado", 2, "25.00");
-            var b = linea("Teclado", 2, "25.00");
+            var a = line("Keyboard", 2, "25.00");
+            var b = line("Keyboard", 2, "25.00");
 
             assertThat(a).isEqualTo(b);
             assertThat(a.hashCode()).isEqualTo(b.hashCode());
-            assertThat(a.toString()).contains("producto=Teclado", "cantidad=2");
+            assertThat(a.toString()).contains("product=Keyboard", "quantity=2");
         }
 
         @Test
-        @DisplayName("los accesores se llaman como el componente, sin 'get'")
-        void accesores() {
-            var l = linea("Ratón", 3, "15.50");
+        @DisplayName("accessors are named after the component, without 'get'")
+        void accessors() {
+            var l = line("Mouse", 3, "15.50");
 
-            assertThat(l.producto()).isEqualTo("Ratón");
-            assertThat(l.cantidad()).isEqualTo(3);
-            assertThat(l.precioUnitario()).isEqualByComparingTo("15.50");
+            assertThat(l.product()).isEqualTo("Mouse");
+            assertThat(l.quantity()).isEqualTo(3);
+            assertThat(l.unitPrice()).isEqualByComparingTo("15.50");
         }
 
         @Test
-        @DisplayName("subtotal = cantidad x precio unitario")
+        @DisplayName("subtotal = quantity x unit price")
         void subtotal() {
-            assertThat(linea("Teclado", 2, "25.00").subtotal()).isEqualByComparingTo("50.00");
-            assertThat(linea("Cable HDMI", 4, "7.25").subtotal()).isEqualByComparingTo("29.00");
+            assertThat(line("Keyboard", 2, "25.00").subtotal()).isEqualByComparingTo("50.00");
+            assertThat(line("HDMI cable", 4, "7.25").subtotal()).isEqualByComparingTo("29.00");
         }
 
-        @ParameterizedTest(name = "cantidad {0} no es válida")
+        @ParameterizedTest(name = "quantity {0} is not valid")
         @ValueSource(ints = {0, -1, -100})
-        @DisplayName("rechaza cantidades menores o iguales a 0")
-        void cantidadInvalida(int cantidad) {
-            assertThatThrownBy(() -> linea("Teclado", cantidad, "25.00"))
+        @DisplayName("rejects quantities less than or equal to 0")
+        void invalidQuantity(int quantity) {
+            assertThatThrownBy(() -> line("Keyboard", quantity, "25.00"))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
-        @ParameterizedTest(name = "producto \"{0}\" no es válido")
+        @ParameterizedTest(name = "product \"{0}\" is not valid")
         @ValueSource(strings = {"", "   "})
-        @DisplayName("rechaza un producto en blanco")
-        void productoEnBlanco(String producto) {
-            assertThatThrownBy(() -> linea(producto, 1, "25.00"))
+        @DisplayName("rejects a blank product")
+        void blankProduct(String product) {
+            assertThatThrownBy(() -> line(product, 1, "25.00"))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
-        @DisplayName("rechaza un producto null")
-        void productoNull() {
-            assertThatThrownBy(() -> new LineaPedido(null, 1, BigDecimal.TEN))
+        @DisplayName("rejects a null product")
+        void nullProduct() {
+            assertThatThrownBy(() -> new OrderLine(null, 1, BigDecimal.TEN))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
-        @DisplayName("rechaza un precio negativo o null")
-        void precioInvalido() {
-            assertThatThrownBy(() -> linea("Teclado", 1, "-0.01"))
+        @DisplayName("rejects a negative or null price")
+        void invalidPrice() {
+            assertThatThrownBy(() -> line("Keyboard", 1, "-0.01"))
                     .isInstanceOf(IllegalArgumentException.class);
-            assertThatThrownBy(() -> new LineaPedido("Teclado", 1, null))
+            assertThatThrownBy(() -> new OrderLine("Keyboard", 1, null))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
-        @DisplayName("acepta un precio 0 (producto de regalo)")
-        void precioCero() {
-            assertThat(linea("Pegatina", 1, "0").subtotal()).isEqualByComparingTo("0");
+        @DisplayName("accepts a price of 0 (free gift)")
+        void zeroPrice() {
+            assertThat(line("Sticker", 1, "0").subtotal()).isEqualByComparingTo("0");
         }
     }
 
     @Nested
-    @DisplayName("Pedido")
-    class PedidoTests {
+    @DisplayName("Order")
+    class OrderTests {
 
         @Test
-        @DisplayName("total = suma de los subtotales de las líneas")
+        @DisplayName("total = sum of the line subtotals")
         void total() {
-            assertThat(PedidosDePrueba.pedido1().total()).isEqualByComparingTo("65.50");
+            assertThat(TestOrders.order1().total()).isEqualByComparingTo("65.50");
         }
 
         @Test
-        @DisplayName("un pedido sin líneas vale 0")
-        void totalSinLineas() {
-            assertThat(PedidosDePrueba.pedido6().total()).isEqualByComparingTo(BigDecimal.ZERO);
+        @DisplayName("an order with no lines is worth 0")
+        void totalWithoutLines() {
+            assertThat(TestOrders.order6().total()).isEqualByComparingTo(BigDecimal.ZERO);
         }
 
         @Test
-        @DisplayName("cliente, fecha y estado son obligatorios")
-        void camposObligatorios() {
-            var hoy = LocalDate.now();
-            List<LineaPedido> lineas = List.of();
+        @DisplayName("customer, date and status are required")
+        void requiredFields() {
+            var today = LocalDate.now();
+            List<OrderLine> lines = List.of();
 
-            assertThatThrownBy(() -> new Pedido(1, null, hoy, EstadoPedido.PAGADO, lineas))
+            assertThatThrownBy(() -> new Order(1, null, today, OrderStatus.PAID, lines))
                     .isInstanceOf(NullPointerException.class);
-            assertThatThrownBy(() -> new Pedido(1, "Ana", null, EstadoPedido.PAGADO, lineas))
+            assertThatThrownBy(() -> new Order(1, "Ana", null, OrderStatus.PAID, lines))
                     .isInstanceOf(NullPointerException.class);
-            assertThatThrownBy(() -> new Pedido(1, "Ana", hoy, null, lineas))
+            assertThatThrownBy(() -> new Order(1, "Ana", today, null, lines))
                     .isInstanceOf(NullPointerException.class);
         }
 
         @Test
-        @DisplayName("modificar la lista original no cambia el pedido (copia defensiva)")
-        void copiaDefensiva() {
-            var lineas = new ArrayList<LineaPedido>();
-            lineas.add(linea("Teclado", 1, "25.00"));
-            var pedido = new Pedido(1, "Ana", LocalDate.now(), EstadoPedido.PENDIENTE, lineas);
+        @DisplayName("changing the original list does not change the order (defensive copy)")
+        void defensiveCopy() {
+            var lines = new ArrayList<OrderLine>();
+            lines.add(line("Keyboard", 1, "25.00"));
+            var order = new Order(1, "Ana", LocalDate.now(), OrderStatus.PENDING, lines);
 
-            lineas.add(linea("Monitor", 1, "180.00"));
+            lines.add(line("Monitor", 1, "180.00"));
 
-            assertThat(pedido.lineas()).hasSize(1);
-            assertThat(pedido.total()).isEqualByComparingTo("25.00");
+            assertThat(order.lines()).hasSize(1);
+            assertThat(order.total()).isEqualByComparingTo("25.00");
         }
 
         @Test
-        @DisplayName("las líneas del pedido no se pueden modificar desde fuera")
-        void lineasInmodificables() {
-            var pedido = PedidosDePrueba.pedido1();
+        @DisplayName("the order lines cannot be modified from outside")
+        void unmodifiableLines() {
+            var order = TestOrders.order1();
 
-            assertThatThrownBy(() -> pedido.lineas().add(linea("Monitor", 1, "180.00")))
+            assertThatThrownBy(() -> order.lines().add(line("Monitor", 1, "180.00")))
                     .isInstanceOf(UnsupportedOperationException.class);
         }
     }
